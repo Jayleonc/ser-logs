@@ -2,12 +2,6 @@ package serlogs
 
 import "time"
 
-// Field represents a key-value pair for log content.
-type Field struct {
-	Key string
-	Val any
-}
-
 // Logger defines the interface for logging at various levels.
 type Logger interface {
 	LogEntry(LogEntry) error
