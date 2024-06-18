@@ -1,6 +1,7 @@
-package log
+package serlogs
 
-type Entry struct {
+// LogEntry represents a log entry to be sent to the log server.
+type LogEntry struct {
 	ServiceName string                 `json:"service_name" binding:"required"`
 	ModuleName  string                 `json:"module_name" binding:"required"`
 	MethodName  string                 `json:"method_name" binding:"required"`

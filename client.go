@@ -1,94 +1,62 @@
-package log
+package serlogs
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
 )
 
-type ClientI interface {
-	Send(entry Entry) error
+// LogClient defines the interface for sending log entries and performing a ping check.
+type LogClient interface {
+	Send(LogEntry) error
 	Ping() error
 }
 
+// Client implements the LogClient interface.
 type Client struct {
-	TargetUrl  string
-	ApiKey     string
+	TargetURL  string
+	APIKey     string
 	AppName    string
-	HttpClient *http.Client
+	HTTPClient HTTPClientI
 }
 
-func NewLogClient(targetUrl, apiKey, appName string) *Client {
+// NewLogClient creates a new Client for sending log entries.
+func NewLogClient(targetURL, apiKey, appName string, httpClient HTTPClientI) *Client {
 	return &Client{
-		TargetUrl:  targetUrl,
-		ApiKey:     apiKey,
+		TargetURL:  targetURL,
+		APIKey:     apiKey,
 		AppName:    appName,
-		HttpClient: &http.Client{Timeout: 10 * time.Second},
+		HTTPClient: httpClient,
 	}
 }
 
-func (c *Client) Send(entry Entry) error {
-	url := c.TargetUrl
+// Send sends a log entry to the log server.
+func (c *Client) Send(logEntry LogEntry) error {
+	url := c.TargetURL
 	headers := map[string]string{
 		"Content-Type": "application/json",
-		"X-API-KEY":    c.ApiKey,
+		"X-API-KEY":    c.APIKey,
 		"X-APP-NAME":   c.AppName,
 	}
 
-	data, err := json.Marshal(entry)
+	err := c.HTTPClient.Post(url, headers, logEntry, nil)
 	if err != nil {
-		return fmt.Errorf("请求体序列化失败: %v", err)
-	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	if err != nil {
-		return fmt.Errorf("创建请求失败: %v", err)
-	}
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	resp, err := c.HttpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("发送请求失败: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("请求失败，状态码: %d", resp.StatusCode)
+		return fmt.Errorf("failed to send log entry: %v", err)
 	}
 
 	return nil
 }
 
+// Ping checks the health of the log server.
 func (c *Client) Ping() error {
-	url := c.TargetUrl + "/ping"
+	url := c.TargetURL + "/ping"
 	headers := map[string]string{
-		"X-API-KEY":  c.ApiKey,
+		"X-API-KEY":  c.APIKey,
 		"X-APP-NAME": c.AppName,
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	var result interface{}
+	err := c.HTTPClient.Get(url, headers, &result)
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %v", err)
+		return fmt.Errorf("failed to ping log server: %v", err)
 	}
-
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
-
-	resp, err := c.HttpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("发送请求失败: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("请求失败，状态码: %d", resp.StatusCode)
-	}
-
 	return nil
 }
