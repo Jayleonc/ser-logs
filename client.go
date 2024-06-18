@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type ClientI interface {
+	Send(entry Entry) error
+	Ping() error
+}
+
 type Client struct {
 	TargetUrl  string
 	ApiKey     string
@@ -24,7 +29,7 @@ func NewLogClient(targetUrl, apiKey, appName string) *Client {
 	}
 }
 
-func (c *Client) send(logRequest Entry) error {
+func (c *Client) Send(entry Entry) error {
 	url := c.TargetUrl
 	headers := map[string]string{
 		"Content-Type": "application/json",
@@ -32,7 +37,7 @@ func (c *Client) send(logRequest Entry) error {
 		"X-APP-NAME":   c.AppName,
 	}
 
-	data, err := json.Marshal(logRequest)
+	data, err := json.Marshal(entry)
 	if err != nil {
 		return fmt.Errorf("请求体序列化失败: %v", err)
 	}
