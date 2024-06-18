@@ -1,5 +1,6 @@
 package serlogs
 
+// Config holds the configuration for the log client and logger.
 type Config struct {
 	// TargetURL is the URL of the log server.
 	TargetURL string
@@ -7,6 +8,10 @@ type Config struct {
 	APIKey string
 	// AppName is the name of the application sending logs.
 	AppName string
-	// HTTPClient is the HTTP client used to send requests.
-	HTTPClient httpClient
+	// ServiceName is the name of the service sending logs.
+	ServiceName string
+	// Host is the host name of the service sending logs.
+	Host string
+	// Env is the environment in which the service is running.
+	Env string
 }

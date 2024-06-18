@@ -25,12 +25,12 @@ type client struct {
 }
 
 // NewSerLogsClient creates a new client for sending log entries.
-func NewSerLogsClient(config Config) LogClient {
+func NewSerLogsClient(targetUrl, apiKey, appName string, httpClient httpClient) LogClient {
 	return &client{
-		targetURL:  config.TargetURL,
-		apiKey:     config.APIKey,
-		appName:    config.AppName,
-		httpClient: config.HTTPClient,
+		targetURL:  targetUrl,
+		apiKey:     apiKey,
+		appName:    appName,
+		httpClient: httpClient,
 	}
 }
 
