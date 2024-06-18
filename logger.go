@@ -1,32 +1,27 @@
 package log
 
-import (
-	"time"
-)
-
-type Logger interface {
-	Info(module, method, requestID string, logContent map[string]interface{})
-	Warn(module, method, requestID string, logContent map[string]interface{})
-	Error(module, method, requestID string, logContent map[string]interface{})
-}
-
-type logger struct {
+type Logger struct {
+	Client      *Client
 	ServiceName string
 	Host        string
 	Env         string
-	sender      SenderI
 }
 
-func NewLogger(sender SenderI, serviceName, host, env string) Logger {
-	return &logger{
-		sender:      sender,
+func NewLogger(targetUrl, apiKey, appName, serviceName, host, env string) (*Logger, error) {
+	client := NewLogClient(targetUrl, apiKey, appName)
+	err := client.Ping()
+	if err != nil {
+		return nil, err
+	}
+	return &Logger{
+		Client:      client,
 		ServiceName: serviceName,
 		Host:        host,
 		Env:         env,
-	}
+	}, nil
 }
 
-func (l *logger) log(level, module, method, requestID string, logContent map[string]interface{}) {
+func (l *Logger) log(level, module, method, requestID string, logContent map[string]interface{}) error {
 	entry := Entry{
 		ServiceName: l.ServiceName,
 		ModuleName:  module,
@@ -37,31 +32,17 @@ func (l *logger) log(level, module, method, requestID string, logContent map[str
 		Host:        l.Host,
 		Env:         l.Env,
 	}
-	l.sender.LogChan() <- entry
+	return l.Client.send(entry)
 }
 
-func (l *logger) Info(module, method, requestID string, logContent map[string]interface{}) {
-	l.log("INFO", module, method, requestID, logContent)
+func (l *Logger) Info(module, method, requestID string, logContent map[string]interface{}) error {
+	return l.log("INFO", module, method, requestID, logContent)
 }
 
-func (l *logger) Warn(module, method, requestID string, logContent map[string]interface{}) {
-	l.log("WARN", module, method, requestID, logContent)
+func (l *Logger) Warn(module, method, requestID string, logContent map[string]interface{}) error {
+	return l.log("WARN", module, method, requestID, logContent)
 }
 
-func (l *logger) Error(module, method, requestID string, logContent map[string]interface{}) {
-	l.log("ERROR", module, method, requestID, logContent)
-}
-
-// NewSimpleLogger simplifies the initialization process for the logger.
-func NewSimpleLogger(targetUrl, apiKey, appName, serviceName, host, env string) (Logger, error) {
-	httpClient := NewHTTPClient(10 * time.Second)
-	client := NewLogClient(targetUrl, apiKey, appName, httpClient)
-	err := client.Ping()
-	if err != nil {
-		return nil, err
-	}
-	sender := NewLogSender(client)
-	sender.Start()
-	logger := NewLogger(sender, serviceName, host, env)
-	return logger, nil
+func (l *Logger) Error(module, method, requestID string, logContent map[string]interface{}) error {
+	return l.log("ERROR", module, method, requestID, logContent)
 }
