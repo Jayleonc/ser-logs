@@ -1,3 +1,3 @@
-module github.com/Jayleonc/ser-logs
+module github.com/jayleonc/ser-logs
 
-go 1.21
+go 1.21.8
