@@ -9,23 +9,28 @@ import (
 	"time"
 )
 
-// HTTPClientI defines the interface for HTTP client operations.
-type HTTPClientI interface {
+// httpClient defines the interface for HTTP client operations.
+type httpClient interface {
+	// Do sends an HTTP request and returns an HTTP response.
 	Do(req *http.Request) (*http.Response, error)
+	// Get sends a GET request to the specified URL.
 	Get(url string, headers map[string]string, result interface{}) error
+	// Post sends a POST request to the specified URL with the given body.
 	Post(url string, headers map[string]string, body, result interface{}) error
+	// Put sends a PUT request to the specified URL with the given body.
 	Put(url string, headers map[string]string, body, result interface{}) error
+	// Delete sends a DELETE request to the specified URL with the given body.
 	Delete(url string, headers map[string]string, body, result interface{}) error
 }
 
-// HTTPClient implements the HTTPClientI interface.
-type HTTPClient struct {
+// httpclient implements the httpClient interface.
+type httpclient struct {
 	client *http.Client
 }
 
-// NewHTTPClient creates a new HTTPClient with the specified timeout.
-func NewHTTPClient(timeout time.Duration) HTTPClientI {
-	return &HTTPClient{
+// newHTTPClient creates a new httpclient with the specified timeout.
+func newHTTPClient(timeout time.Duration) httpClient {
+	return &httpclient{
 		client: &http.Client{
 			Timeout: timeout,
 		},
@@ -33,12 +38,12 @@ func NewHTTPClient(timeout time.Duration) HTTPClientI {
 }
 
 // Do sends an HTTP request and returns an HTTP response.
-func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
+func (c *httpclient) Do(req *http.Request) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
 // doRequest is a helper method for sending HTTP requests.
-func (c *HTTPClient) doRequest(method, url string, headers map[string]string, body, result interface{}) error {
+func (c *httpclient) doRequest(method, url string, headers map[string]string, body, result interface{}) error {
 	var reqBody []byte
 	var err error
 
@@ -53,9 +58,11 @@ func (c *HTTPClient) doRequest(method, url string, headers map[string]string, bo
 	if err != nil {
 		return fmt.Errorf("failed to create request: %v", err)
 	}
+
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
+
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -82,21 +89,21 @@ func (c *HTTPClient) doRequest(method, url string, headers map[string]string, bo
 }
 
 // Get sends a GET request to the specified URL.
-func (c *HTTPClient) Get(url string, headers map[string]string, result interface{}) error {
+func (c *httpclient) Get(url string, headers map[string]string, result interface{}) error {
 	return c.doRequest("GET", url, headers, nil, result)
 }
 
 // Post sends a POST request to the specified URL with the given body.
-func (c *HTTPClient) Post(url string, headers map[string]string, body, result interface{}) error {
+func (c *httpclient) Post(url string, headers map[string]string, body, result interface{}) error {
 	return c.doRequest("POST", url, headers, body, result)
 }
 
 // Put sends a PUT request to the specified URL with the given body.
-func (c *HTTPClient) Put(url string, headers map[string]string, body, result interface{}) error {
+func (c *httpclient) Put(url string, headers map[string]string, body, result interface{}) error {
 	return c.doRequest("PUT", url, headers, body, result)
 }
 
 // Delete sends a DELETE request to the specified URL with the given body.
-func (c *HTTPClient) Delete(url string, headers map[string]string, body, result interface{}) error {
+func (c *httpclient) Delete(url string, headers map[string]string, body, result interface{}) error {
 	return c.doRequest("DELETE", url, headers, body, result)
 }
