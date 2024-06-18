@@ -53,11 +53,15 @@ func (l *logger) Error(module, method, requestID string, logContent map[string]i
 }
 
 // NewSimpleLogger simplifies the initialization process for the logger.
-func NewSimpleLogger(targetUrl, apiKey, appName, serviceName, host, env string) Logger {
+func NewSimpleLogger(targetUrl, apiKey, appName, serviceName, host, env string) (Logger, error) {
 	httpClient := NewHTTPClient(10 * time.Second)
 	client := NewLogClient(targetUrl, apiKey, appName, httpClient)
+	err := client.Ping()
+	if err != nil {
+		return nil, err
+	}
 	sender := NewLogSender(client)
-	logger := NewLogger(sender, serviceName, host, env)
 	sender.Start()
-	return logger
+	logger := NewLogger(sender, serviceName, host, env)
+	return logger, nil
 }
