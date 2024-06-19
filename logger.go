@@ -7,11 +7,11 @@ type Logger interface {
 	// LogEntry logs a generic log entry.
 	LogEntry(LogEntry) error
 	// Info logs an informational message.
-	Info(module, method, requestID string, fields ...Field) error
+	Info(module, method, requestId string, fields ...Field) error
 	// Warn logs a warning message.
-	Warn(module, method, requestID string, fields ...Field) error
+	Warn(module, method, requestId string, fields ...Field) error
 	// Error logs an error message.
-	Error(module, method, requestID string, fields ...Field) error
+	Error(module, method, requestId string, fields ...Field) error
 }
 
 // logger implements the Logger interface.
@@ -28,7 +28,7 @@ type logger struct {
 
 // NewLogger creates a new logger with the specified configuration.
 func NewLogger(cfg Config) (Logger, error) {
-	c := NewSerLogsClient(cfg.TargetURL, cfg.APIKey, cfg.AppName, newHTTPClient(time.Second*10))
+	c := NewSerLogsClient(cfg.Url, cfg.APIKey, cfg.AppName, newHTTPClient(time.Second*10))
 
 	err := c.Ping()
 	if err != nil {
@@ -52,7 +52,7 @@ func (l *logger) LogEntry(entry LogEntry) error {
 }
 
 // log is a helper method to create and send a log entry with the specified level and fields.
-func (l *logger) log(level, module, method, requestID string, fields ...Field) error {
+func (l *logger) log(level, module, method, requestId string, fields ...Field) error {
 	logContent := make(map[string]interface{})
 	for _, field := range fields {
 		logContent[field.Key] = field.Val
@@ -60,7 +60,7 @@ func (l *logger) log(level, module, method, requestID string, fields ...Field) e
 	entry := LogEntry{
 		ModuleName: module,
 		MethodName: method,
-		RequestID:  requestID,
+		RequestID:  requestId,
 		LogLevel:   level,
 		LogContent: logContent,
 	}
@@ -68,16 +68,16 @@ func (l *logger) log(level, module, method, requestID string, fields ...Field) e
 }
 
 // Info logs an informational message.
-func (l *logger) Info(module, method, requestID string, fields ...Field) error {
-	return l.log("INFO", module, method, requestID, fields...)
+func (l *logger) Info(module, method, requestId string, fields ...Field) error {
+	return l.log("INFO", module, method, requestId, fields...)
 }
 
 // Warn logs a warning message.
-func (l *logger) Warn(module, method, requestID string, fields ...Field) error {
-	return l.log("WARN", module, method, requestID, fields...)
+func (l *logger) Warn(module, method, requestId string, fields ...Field) error {
+	return l.log("WARN", module, method, requestId, fields...)
 }
 
 // Error logs an error message.
-func (l *logger) Error(module, method, requestID string, fields ...Field) error {
-	return l.log("ERROR", module, method, requestID, fields...)
+func (l *logger) Error(module, method, requestId string, fields ...Field) error {
+	return l.log("ERROR", module, method, requestId, fields...)
 }
