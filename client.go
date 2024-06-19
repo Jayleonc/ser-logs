@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 )
 
 // LogClient defines the interface for sending log entries and performing a ping check.
@@ -58,14 +59,29 @@ func (c *client) send(logEntry LogEntry) error {
 func (c *client) Ping() error {
 	url := c.url + "/ping"
 	headers := map[string]string{
-		"X-API-KEY":  c.apiKey,  // todo 待确定
-		"X-APP-NAME": c.appName, // todo 待确定
+		"X-API-KEY":  c.apiKey,
+		"X-APP-NAME": c.appName,
 	}
 
 	var result interface{}
 	err := c.httpClient.Get(url, headers, &result)
 	if err != nil {
-		// 解析错误类型并提供详细提示信息
+		// 尝试从错误中解析状态码
+		var httpErr *httpClientError
+		if errors.As(err, &httpErr) {
+			switch httpErr.StatusCode {
+			case http.StatusNotFound:
+				return fmt.Errorf("initialization failed: the log server endpoint '%s' was not found (404). Please check the URL", c.url)
+			case http.StatusUnauthorized:
+				return fmt.Errorf("initialization failed: unauthorized access to the log server. Please check your API key and app name")
+			case http.StatusInternalServerError:
+				return fmt.Errorf("initialization failed: internal server error at the log server. Please try again later")
+			default:
+				return fmt.Errorf("initialization failed: unexpected response from the log server (status code: %d)", httpErr.StatusCode)
+			}
+		}
+
+		// 解析其他错误类型并提供详细提示信息
 		switch {
 		case errors.Is(err, context.DeadlineExceeded):
 			return fmt.Errorf("initialization failed: unable to reach the log server due to a network timeout")

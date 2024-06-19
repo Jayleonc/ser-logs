@@ -74,7 +74,10 @@ func (c *httpclient) doRequest(method, url string, headers map[string]string, bo
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s request failed, status code: %d", method, resp.StatusCode)
+		return &httpClientError{
+			StatusCode: resp.StatusCode,
+			Err:        fmt.Errorf("%s request failed, status code: %d", method, resp.StatusCode),
+		}
 	}
 
 	if result != nil {
@@ -106,4 +109,17 @@ func (c *httpclient) Put(url string, headers map[string]string, body, result int
 // Delete sends a DELETE request to the specified URL with the given body.
 func (c *httpclient) Delete(url string, headers map[string]string, body, result interface{}) error {
 	return c.doRequest("DELETE", url, headers, body, result)
+}
+
+type httpClientError struct {
+	StatusCode int
+	Err        error
+}
+
+func (e *httpClientError) Error() string {
+	return fmt.Sprintf("%s request failed, status code: %d, error: %v", e.Err, e.StatusCode, e.Err)
+}
+
+func (e *httpClientError) Unwrap() error {
+	return e.Err
 }
