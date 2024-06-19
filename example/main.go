@@ -20,9 +20,12 @@ func main() {
 	}
 
 	err = logger.Info("MyModule", "MyMethod", "12345",
-		serlogs.Field{Key: "message", Val: "This is an info log"},
-		serlogs.Field{Key: "detail", Val: "This is a detailed message"})
+		serlogs.String("message", "This is an info log"),
+		serlogs.Int64("count", 10),
+		serlogs.Any("detail", "This is a detailed message"))
 	if err != nil {
 		log.Fatalf("Failed to send info log: %v", err)
 	}
+
+	log.Println("Log sent successfully")
 }
