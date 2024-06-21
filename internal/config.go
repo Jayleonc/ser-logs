@@ -3,9 +3,12 @@ package internal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Jayleonc/register/config_center"
 	"github.com/spf13/viper"
 	"log"
+	"os"
+	"strings"
 )
 
 type LogServiceClient struct {
@@ -13,8 +16,13 @@ type LogServiceClient struct {
 }
 
 func NewLogServiceClient() (*LogServiceClient, error) {
+	getwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(getwd)
 	// 读取配置文件
-	viper.SetConfigFile("dev.yaml")
+	viper.SetConfigFile("internal/dev.yaml")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
 		return nil, err
@@ -38,9 +46,14 @@ func NewLogServiceClient() (*LogServiceClient, error) {
 	}
 
 	ctx := context.Background()
-	ip, err := configCenterClient.GetConfig(ctx, "ser-logs/ip")
+	ip, err := configCenterClient.GetConfig(ctx, "ser-logs/host")
 	if err != nil {
 		return nil, err
+	}
+
+	// 检查 ip 是否包含协议前缀
+	if !strings.HasPrefix(ip, "http://") {
+		ip = "http://" + ip
 	}
 
 	return &LogServiceClient{
