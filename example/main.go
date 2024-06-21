@@ -7,7 +7,6 @@ import (
 
 func main() {
 	logger, err := serlogs.NewLogger(serlogs.Config{
-		Url:         "http://localhost:8080",
 		APIKey:      "your-api-key",
 		AppName:     "your-app-name",
 		ServiceName: "user_service",
