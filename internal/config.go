@@ -8,12 +8,16 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
 type LogServiceClient struct {
 	ip string
 }
+
+const defaultConfigFilePath = "internal/dev.yaml"
 
 func NewLogServiceClient() (*LogServiceClient, error) {
 	getwd, err := os.Getwd()
@@ -22,7 +26,17 @@ func NewLogServiceClient() (*LogServiceClient, error) {
 	}
 	fmt.Println(getwd)
 	// 读取配置文件
-	viper.SetConfigFile("internal/dev.yaml")
+
+	// 获取当前文件的绝对路径
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return nil, errors.New("failed to get current file path")
+	}
+	configFilePath := filepath.Join(filepath.Dir(filename), "dev.yaml")
+
+	fmt.Println("ser-logs sdk using config file:", configFilePath)
+
+	viper.SetConfigFile(configFilePath)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("Failed to read config file: %v", err)
 		return nil, err
