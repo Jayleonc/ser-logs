@@ -3,7 +3,7 @@ package serlogs
 // Config holds the configuration for the log client and logger.
 type Config struct {
 	// Url is the URL of the log server.
-	Url string
+	//Url string
 	// APIKey is the API key for authenticating with the log server.
 	APIKey string
 	// AppName is the name of the application sending logs.

@@ -28,9 +28,12 @@ type logger struct {
 
 // NewLogger creates a new logger with the specified configuration.
 func NewLogger(cfg Config) (Logger, error) {
-	c := NewSerLogsClient(cfg.Url, cfg.APIKey, cfg.AppName, newHTTPClient(time.Second*10))
+	c, err := NewSerLogsClient(cfg.APIKey, cfg.AppName, newHTTPClient(time.Second*10))
+	if err != nil {
+		return nil, err
+	}
 
-	err := c.Ping()
+	err = c.Ping()
 	if err != nil {
 		return nil, err
 	}

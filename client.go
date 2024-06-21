@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Jayleonc/ser-logs/internal"
 	"net"
 	"net/http"
 )
@@ -29,13 +30,17 @@ type client struct {
 }
 
 // NewSerLogsClient creates a new client for sending log entries.
-func NewSerLogsClient(url, apiKey, appName string, httpClient httpClient) LogClient {
+func NewSerLogsClient(apiKey, appName string, httpClient httpClient) (LogClient, error) {
+	c, err := internal.NewLogServiceClient()
+	if err != nil {
+		return nil, err
+	}
 	return &client{
-		url:        url,
+		url:        c.GetIP(),
 		apiKey:     apiKey,
 		appName:    appName,
 		httpClient: httpClient,
-	}
+	}, nil
 }
 
 // send sends a log entry to the log server.
